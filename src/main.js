@@ -98,12 +98,15 @@ function formatDate(s, fmt = "yyyy 年 MM 月 dd 日 hh 时 mm 分 ss 秒 SS") {
 	return t.toString();
 }
 
-let flg1 = false, flg2 = false;
+let flg1 = false, flg2 = false, flg3 = false;
 function _nxt() {
 	flg1 = true;
 }
 function _chr() {
 	flg2 = true;
+}
+function _pau() {
+	flg3 = true;
 }
 
 function until(c) {
@@ -121,10 +124,11 @@ async function runTimer(w) {
 		if (t > lim * 1000) {
 			document.getElementById(x).style.color = "red";
 		}
-		if (flg1) {
+		if (flg3) {
 			clearInterval(id);
 		}
 	}, 10, w[4] + "-timer", w[2]);
+	await until(() => flg3);
 	await until(() => flg1);
 	return id;
 }
@@ -141,6 +145,7 @@ async function runScore(x) {
 		}
 	});
 	$("#" + x + "-prog").progress("set label", `正方：${v0} —— 反方:${v1}`);
+	await until(() => flg1);
 }
 
 async function _pageBuild(){
@@ -151,7 +156,7 @@ async function _pageBuild(){
 		}
 	}
 	for (let i in info) {
-		flg1 = flg2 = false;
+		flg1 = flg2 = flg3 = false;
 		activate(info[i][4], getcol(info[i][0]));
 		if (info[i][1] == "tmr") {
 			await runTimer(info[i]);
