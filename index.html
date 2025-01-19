@@ -10,29 +10,42 @@
 <body>
 	<div class="ui main container">
 		<h1 class="ui header" style="text-align: center"></h1>
-		<div class="ui two column grid" id="main">
-		</div>
-		<button class="ui button" onclick="_pau()">停止</button>
-<!--	<button class="ui button" onclick="conti()">继续</button>	-->
-		<div class="ui input">
-			<input id="pos" type="text" placeholder="正方">
-		</div>
-		<div class="ui input">
-			<input id="neg" type="text" placeholder="反方">
-		</div>
-		<button class="ui button" onclick="_chr()">确认</button>
-		<button class="ui button" onclick="_nxt()">下一步</button>
+		<div class="ui two column grid" id="main"></div>
+		<h1 class="ui header" style="text-align: center"></h1>
 	</div>
-	<div class="ui vertical footer segment">
-		<div class="ui center aligned container">
-			<div class="ui section divider"></div>
-			<p style="text-align: center">
-				Powered by
-				<a href="https://github.com/psz2007">psz2007</a>
-				ver 0.2
-			</p>
+	<div id="help" class="ui right wide sidebar vertical menu title">
+		<div class="pusher">
+			<div class="item">
+				<p>若当前为计分环节：</p><br/>
+				<p>在“正方”“反方”输入框内输入计票结果，按下“确认”。比分条出现后按下“下一步”。</p>
+			</div>
+			<div class="item">
+				<p>若当前为计时环节：</p><br/>
+				<p>等待结束后按下“停止”，然后按下“下一步”。</p>
+			</div>
+			<div class="item">
+				<p>按下左侧的<i style="font-size: 1em" class="cog icon"></i>标志可以修改辩手姓名。</p>
+			</div>
+			<div class="item">
+				<p>Powered by <a href="https://github.com/psz2007">psz2007</a> ver 0.3</p><br/>
+				<p>参考： <a href="https://jquery.com/">jQuery</a> / <a href="https://fomantic-ui.com/">Fomantic UI</a></p>
+			</div>
 		</div>
 	</div>
+	<div id="settings" class="ui left wide sidebar vertical menu title">
+		<div class="pusher">
+			<div class="item">
+				<p>设置辩手姓名：</p>
+				<div id="names" class="title"></div>
+			</div>
+		</div>
+	</div>
+	<button class="circular ui basic icon button" onclick="_showHelp()" style="position: fixed; right: 30; top: 30">
+		<i style="font-size: 2em" class="question circle outline icon"></i>
+	</button>
+	<button class="circular ui basic icon button" onclick="_showSettings()" style="position: fixed; left: 30; top: 30">
+		<i style="font-size: 2em" class="cog icon"></i>
+	</button>
 	<script>
 		_pageBuild();
 	</script>
