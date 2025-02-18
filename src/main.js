@@ -3,7 +3,7 @@ const initdata =
 ["正方一辩","tmr",240,""] ["反方一辩","tmr",240,""]
 ["正方二辩","tmr",240,""] ["反方二辩","tmr",240,""]
 ["正方三辩","tmr",240,""] ["反方三辩","tmr",240,""]
-["自由辩论","tmr",900,""]
+["自由辩论","mul-tmr",[["正方",450],["反方",450]],""]
 ["反方四辩","tmr",240,""] ["正方四辩","tmr",240,""]
 ["投票环节","tmr",60,""]
 ["最终得分","cnt",2,""]`;
@@ -38,14 +38,33 @@ function parse(s) {
 						<div class="label"></div>
 					</div>
 				</div>`
-			} else {
+			} else if (val[1] == "tmr") {
 				t.innerHTML = 
 				`<div id="${i}_${j}" class="ui segment">
 					<div class="title" id="${i}_${j}_title">${val[0] + " " + val[3]}</div>
 					<br/>
 					<p id="${i}_${j}_timer" class="timer"></p>
-					</div>
 				</div>`;
+			} else if (val[1] == "mul-tmr") {
+				let s = "", p = val[2];
+				s += 
+				`<div id="${i}_${j}" class="ui segment">
+					<div class="title" id="${i}_${j}_title">${val[0]}</div>
+					<br/>
+					<div class="ui two column grid">
+						<div class="ui two column row">`;
+				for (let k in p) {
+					s += 
+					`<div class="column">
+						<div id="${i}_${j}_${k}" class="ui segment">
+							<div class="title">${val[2][k][0]}</div>
+							<br/>
+							<p id="${i}_${j}_${k}_timer" class="timer"></p>
+						</div>
+					</div>`;
+				}
+				s += `</div></div><br/></div>`;
+				t.innerHTML = s;
 			}
 			cur.appendChild(t);
 			val.push(`${i}_${j}`);
@@ -85,7 +104,7 @@ function inv(s) {
 		return "black";
 	}
 }
-function activate(x, ty, col) {
+function activate(x, ty, col, n) {
 	const cur = document.getElementById(x);
 	cur.className = `ui ${col} tertiary inverted segment`;
 	let t = document.createElement("div");
@@ -99,7 +118,7 @@ function activate(x, ty, col) {
 				<div class="progress"></div>
 			</div>
 		</div>`;
-	} else {
+	} else if (ty == "cnt") {
 		t.innerHTML = 
 		`<div class="ui input">
 			<input id="pos" type="text" placeholder="正方">
@@ -109,13 +128,31 @@ function activate(x, ty, col) {
 		</div>
 		<button class="ui button" onclick="_chr()">确认</button>
 		<button class="ui primary button" onclick="_nxt()">下一步</button>`;
+	} else if (ty == "mul-tmr") {
+		t.innerHTML = 
+		`<button class="ui button" onclick="_pau()">停止</button>
+		<button class="ui primary button" onclick="_nxt()">下一步</button>`;
+		for (let i = 0; i < n; i++) {
+			const w = document.getElementById(x + `_${i}`);
+			let tt = document.createElement("div");
+			tt.style = "text-align: center";
+			tt.innerHTML = 
+			`<button class="ui primary button" onclick="_set(${i})">继续</button>
+			<button class="ui button" onclick="_stp()">停止</button>`;
+			w.appendChild(tt);
+		}
 	}
 	cur.appendChild(t);
 }
-function deactivate(x) {
+function deactivate(x, n) {
 	const cur = document.getElementById(x);
 	cur.className = "ui segment";
 	cur.removeChild(cur.lastChild);
+	for (let i = 0; i < n; i++) {
+		const w = document.getElementById(x + `_${i}`);
+		
+		w.removeChild(w.lastChild);
+	}
 }
 function formatDate(s, fmt = "yyyy 年 MM 月 dd 日 hh 时 mm 分 ss 秒 SS") {
 	if (s == "")
@@ -144,7 +181,7 @@ function formatDate(s, fmt = "yyyy 年 MM 月 dd 日 hh 时 mm 分 ss 秒 SS") {
 	return t.toString();
 }
 
-let flg1 = false, flg2 = false, flg3 = false;
+let flg1 = false, flg2 = false, flg3 = false, curNum = -1;
 function _nxt() {
 	flg1 = true; flg2 = flg3 = false;
 }
@@ -153,6 +190,12 @@ function _chr() {
 }
 function _pau() {
 	flg3 = true; flg1 = false;
+}
+function _stp() {
+	curNum = -1;
+}
+function _set(i) {
+	curNum = i;
 }
 
 function until(c) {
@@ -176,6 +219,37 @@ async function runTimer(w) {
 		}
 	}, 10, w[4] + "_timer", w[2]);
 	await until(() => flg3);
+	await until(() => flg1);
+	return id;
+}
+async function runMulti(w) {
+	const n = w[2].length, x = Number(new Date());
+	let tm = [1, 1], st = [x, x], pre = -1;
+	let id = await setInterval((x, lim) => {
+		const t1 = Number(new Date()), id = curNum;
+		if (id != pre) {
+			if (pre == -1) {
+				st[id] = t1;
+			} else if (id == -1) {
+				tm[pre] += t1 - st[pre];
+			} else {
+				tm[pre] += t1 - st[pre];
+				st[id] = t1;
+			}
+		}
+		for (let i = 0; i < n; i++) {
+			let t = tm[i] + (i == id ? t1 - st[i] : 0);
+			document.getElementById(x + `_${i}_timer`).innerText = formatDate(t, "mm:ss.SS");
+			if (t > lim[i][1] * 1000) {
+				document.getElementById(x).style.color = "red";
+			}
+			// $('.ui.tiny.attached.progress').progress('set percent', Math.min(t / lim / 10, 100.));
+		}
+		pre = id;
+		if (curNum == -1 && flg3) {
+			clearInterval(id);
+		}
+	}, 10, w[4], w[2]);
 	await until(() => flg1);
 	return id;
 }
@@ -206,17 +280,25 @@ async function _pageBuild() {
 	for (let i in info) {
 		if (info[i][1] == "tmr") {
 			document.getElementById(info[i][4] + "_timer").innerText = "00:00.00";
+		} else if (info[i][1] == "mul-tmr") {
+			for (let j in info[i][2]) {
+				document.getElementById(info[i][4] + `_${j}_timer`).innerText = "00:00.00";
+			}
 		}
 	}
 	for (let i in info) {
 		flg1 = false;
-		activate(info[i][4], info[i][1], getcol(info[i][0]));
+		curNum = -1;
+		let n = info[i][1] == "mul-tmr" ? info[i][2].length : 0;
+		activate(info[i][4], info[i][1], getcol(info[i][0]), n);
 		if (info[i][1] == "tmr") {
 			await runTimer(info[i]);
-		} else {
+		} else if (info[i][1] == "cnt") {
 			await runScore(info[i][4]);
+		} else if (info[i][1] == "mul-tmr") {
+			await runMulti(info[i]);
 		}
-		deactivate(info[i][4]);
+		deactivate(info[i][4], n);
 	}
 }
 
