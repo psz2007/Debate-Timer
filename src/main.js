@@ -7,6 +7,10 @@ const initdata =
 ["反方四辩","tmr",240,""] ["正方四辩","tmr",240,""]
 ["投票环节","tmr",60,""]
 ["最终得分","cnt",2,""]`;
+
+const bellTime = 240 * 1000;
+const bellUrl = "sfx/bell.mp3", alarmUrl = "sfx/alarm.mp3";
+
 let data = initdata, ts = [];
 
 function parse(s) {
@@ -206,11 +210,22 @@ function until(c) {
 	return new Promise(poll);
 }
 async function runTimer(w) {
-	const t0 = new Date();
+	const t0 = new Date(), cur = bellTime;
+	let finish = false;
+	let a = new Audio(alarmUrl), b = new Audio(bellUrl), p = bellTime;
 	let id = await setInterval((x, lim) => {
 		const t = (new Date() - t0);
 		document.getElementById(x).innerText = formatDate(t, "mm:ss.SS");
+		if (t > p) {
+			b.play();
+			p += bellTime;
+		}
 		if (t > lim * 1000) {
+			b.pause();
+			if (!finish) {
+				a.play();
+				finish = true;
+			}
 			document.getElementById(x).style.color = "red";
 		}
 		$('.ui.tiny.attached.progress').progress('set percent', Math.min(t / lim / 10, 100.));
@@ -219,12 +234,14 @@ async function runTimer(w) {
 		}
 	}, 10, w[4] + "_timer", w[2]);
 	await until(() => flg3);
+	a.pause();
 	await until(() => flg1);
 	return id;
 }
 async function runMulti(w) {
 	const n = w[2].length, x = Number(new Date());
-	let tm = [1, 1], st = [x, x], pre = -1;
+	let tm = [1, 1], st = [x, x], pre = -1, finish = [false, false];
+	let a = new Audio(alarmUrl), b = new Audio(bellUrl), p = [bellTime, bellTime];
 	let id = await setInterval((x, lim) => {
 		const t1 = Number(new Date()), id = curNum;
 		if (id != pre) {
@@ -240,10 +257,19 @@ async function runMulti(w) {
 		for (let i = 0; i < n; i++) {
 			let t = tm[i] + (i == id ? t1 - st[i] : 0);
 			document.getElementById(x + `_${i}_timer`).innerText = formatDate(t, "mm:ss.SS");
-			if (t > lim[i][1] * 1000) {
-				document.getElementById(x).style.color = "red";
+			if (t > p[i]) {
+				b.play();
+				p[i] += bellTime;
 			}
-			// $('.ui.tiny.attached.progress').progress('set percent', Math.min(t / lim / 10, 100.));
+			if (t > lim[i][1] * 1000) {
+				b.pause();
+				if (!finish[i]) {
+					a.play();
+					finish[i] = true;
+				}
+				document.getElementById(x + `_${i}_timer`).style.color = "red";
+			}
+			// $('.ui.tiny.attached.progress')[i].progress('set percent', Math.min(t / lim[i][1] / 10, 100.));
 		}
 		pre = id;
 		if (curNum == -1 && flg3) {
@@ -265,8 +291,27 @@ async function runScore(x) {
 			bars: ['正方', '反方']
 		}
 	});
-	$(id).progress("set label", `正方：${v0} —— 反方:${v1}`);
+	$(id).progress("set label", `正方：${v0} —— 反方：${v1}`);
 	await until(() => flg1);
+}
+
+function showResult(pre, cur) {
+	const r = document.getElementById("result");
+	pre = `#${pre}_prog div.label`; cur = `#${cur}_prog div.label`;
+	const v = [$(pre)[0].innerText, $(cur)[0].innerText];
+	for (let i = 0; i < 2; i++) {
+		v[i] = v[i].split(" —— ");
+		for (let j = 0; j < 2; j++) {
+			v[i][j] = Number(v[i][j].split("：")[1]);
+		}
+	}
+	const d1 = v[1][0] - v[0][0], d2 = v[1][1] - v[0][1];
+	const p1 = v[0][0] / (v[0][0] + v[0][1]), p2 = v[1][0] / (v[1][0] + v[1][1]);
+	const sgn = (x) => (x < 0 ? "-" : x > 0 ? "+" : "±");
+	document.getElementById("result").innerHTML =
+	`<p>正方走票：${sgn(d1)}${Math.abs(d1)}</p>
+	<p>反方走票：${sgn(d2)}${Math.abs(d2)}</p>
+	<p>${p1 < p2 ? "正方胜" : p1 > p2 ? "反方胜" : "平票"}</p>`;
 }
 
 async function _pageBuild() {
@@ -300,6 +345,7 @@ async function _pageBuild() {
 		}
 		deactivate(info[i][4], n);
 	}
+	showResult(info[0][4], info[info.length - 1][4]);
 }
 
 function _showHelp() {

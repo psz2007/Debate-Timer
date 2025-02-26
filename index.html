@@ -12,9 +12,20 @@
 		<h1 class="ui header" style="text-align: center"></h1>
 		<div class="ui two column grid" id="main"></div>
 		<h1 class="ui header" style="text-align: center"></h1>
+		<p class="timer" id="result"></p>
 	</div>
+	<footer class="ui vertical footer segment">
+		<div class="ui container" style="text-align: center">
+			<p>Powered by <a href="https://github.com/psz2007">psz2007</a> ver 1.0</p>
+			<p>Reference: <a href="https://jquery.com/">jQuery</a> / <a href="https://fomantic-ui.com/">Fomantic UI</a></p>
+			<p>Audio edited from <a href="https://pixabay.com/">Pixabay</a></p>
+		</div>
+	</footer>
 	<div id="help" class="ui right wide sidebar vertical menu title">
 		<div class="pusher">
+			<div class="item">
+				使用该计时器的一般流程：
+			</div>
 			<div class="item">
 				<p>若当前为计分环节：</p><br/>
 				<p>在“正方”“反方”输入框内输入计票结果，按下“确认”。比分条出现后按下“下一步”。</p>
@@ -22,14 +33,41 @@
 			<div class="item">
 				<p>若当前为计时环节：</p><br/>
 				<p>等待结束后按下“停止”，然后按下“下一步”。</p>
-				<p>自由辩论时，各方按下“继续”开始计时，按下“停止”暂停计时。结束后按下“停止”“下一步”。</p>
+				<p>自由辩论时，各方按下“继续”开始计时，按下“停止”暂停计时。结束后按下“结束”“下一步”。</p>
+				<p>计时环节每两分钟会用铃声提醒时间，时间用尽时会响起闹铃声。</p>
 			</div>
 			<div class="item">
-				<p>按下左侧的<i style="font-size: 1em" class="cog icon"></i>标志可以修改辩手姓名。</p>
+				<p>需注意按下“下一步”时，下一环节会立即开始计时。故主持人需要在按下“确认”/“停止”/“结束”后先宣布下一环节的开始再按下“下一步”。</p>
 			</div>
 			<div class="item">
-				<p>Powered by <a href="https://github.com/psz2007">psz2007</a> ver 0.3</p><br/>
-				<p>参考： <a href="https://jquery.com/">jQuery</a> / <a href="https://fomantic-ui.com/">Fomantic UI</a></p>
+				<p>按下左侧的<i style="font-size: 1em" class="cog icon"></i>标志进行设置后可以修改辩手姓名。目前该信息无法保存，刷新后会消失。</p>
+			</div>
+			<div class="item">
+				<details class="ui styled accordion">
+					<summary class="title">
+						<i class="dropdown icon"></i>
+						开发者笔记
+					</summary>
+					<div class="content">
+						<p>
+							<b>进行修改之前确认你很清楚自己在做什么。</b>
+							<br/><br/>
+							若要自定义辩论赛流程和进行细节微调，请修改 <span class="code">main.js</span> 中的 
+							<span class="code">initdata</span>，<span class="code">bellTime</span>，<span class="code">bellUrl</span> 和 <span class="code">alarmUrl</span>。
+							<br/>
+							<span class="code">initdata</span> 中的一行对应主界面中的一行，每一格数据格式形如：
+							<br/>
+							<span class="code">["&lt;标题&gt;","&lt;类型&gt;",&lt;参数&gt;,""]</span>。
+							<br/>
+							类型可能为以下之一：<span class="code">tmr</span>，<span class="code">mul-tmr</span> 或 <span class="code">cnt</span>。数据单位为秒或者队伍数。
+							<br/>
+							具体格式参照默认值。注意 <span class="code">bellTime</span> 的单位是毫秒。
+							<br/>
+							<i>目前数据结构只能支撑两队。理论上支持多队辩论，但需要改的东西有点多，留待后人（？）。</i>
+							<br/>
+						</p>
+					</div>
+				</details>
 			</div>
 		</div>
 	</div>
